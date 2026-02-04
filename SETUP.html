@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BetArena - Setup Supabase</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #e2e8f0;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #60a5fa;
+            font-size: 2.5em;
+        }
+        .steps {
+            display: grid;
+            gap: 20px;
+        }
+        .step {
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: 12px;
+            padding: 24px;
+            backdrop-filter: blur(10px);
+        }
+        .step h2 {
+            color: #60a5fa;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .step-number {
+            background: #60a5fa;
+            color: #0f172a;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+        .button {
+            display: inline-block;
+            background: #60a5fa;
+            color: #0f172a;
+            padding: 12px 24px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+            margin-top: 12px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .button:hover {
+            background: #3b82f6;
+            transform: translateY(-2px);
+        }
+        .button.secondary {
+            background: #475569;
+            color: #e2e8f0;
+        }
+        .button.secondary:hover {
+            background: #64748b;
+        }
+        code {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-family: 'Monaco', 'Courier New', monospace;
+            color: #fbbf24;
+        }
+        .info-box {
+            background: rgba(96, 165, 250, 0.1);
+            border-left: 4px solid #60a5fa;
+            padding: 16px;
+            margin-top: 12px;
+            border-radius: 4px;
+        }
+        .warning-box {
+            background: rgba(251, 191, 36, 0.1);
+            border-left: 4px solid #fbbf24;
+            padding: 16px;
+            margin-top: 12px;
+            border-radius: 4px;
+        }
+        .status {
+            margin-top: 20px;
+            padding: 16px;
+            background: rgba(34, 197, 94, 0.1);
+            border-left: 4px solid #22c55e;
+            border-radius: 4px;
+        }
+        .status.done {
+            color: #22c55e;
+        }
+        .copy-button {
+            background: #475569;
+            color: #e2e8f0;
+            padding: 4px 12px;
+            border-radius: 4px;
+            border: 1px solid #64748b;
+            cursor: pointer;
+            margin-left: 8px;
+            font-size: 0.9em;
+        }
+        .copy-button:hover {
+            background: #64748b;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎮 BetArena - Setup Supabase</h1>
+
+        <div class="steps">
+            <!-- Step 1: Auth Settings -->
+            <div class="step">
+                <h2>
+                    <span class="step-number">1</span>
+                    Desabilitar Confirmação de Email
+                </h2>
+                <p>Isso permite que usuários façam login imediatamente após se registrar.</p>
+                
+                <div class="info-box">
+                    <strong>⚠️ CRÍTICO:</strong> Este passo DEVE ser feito antes de testar!
+                </div>
+
+                <ol style="margin: 16px 0 0 20px; line-height: 1.8;">
+                    <li>Abra: <code>Supabase Dashboard → Auth Settings</code></li>
+                    <li>Role até encontrar <code>Email Auth</code></li>
+                    <li>Desabilite <code>Confirm email</code> (toggle para OFF)</li>
+                    <li>Clique em <code>Save</code></li>
+                </ol>
+
+                <a href="https://supabase.com/dashboard/project/wjhsitjnccmfrudukbix/auth/providers" target="_blank" class="button">
+                    → Ir para Auth Settings
+                </a>
+            </div>
+
+            <!-- Step 2: SQL Editor -->
+            <div class="step">
+                <h2>
+                    <span class="step-number">2</span>
+                    Executar Schema SQL
+                </h2>
+                <p>Criar todas as tabelas, enums e políticas de segurança.</p>
+
+                <ol style="margin: 16px 0 0 20px; line-height: 1.8;">
+                    <li>Abra o SQL Editor</li>
+                    <li>Clique em "New query"</li>
+                    <li>Copie o SQL abaixo</li>
+                    <li>Cole no editor</li>
+                    <li>Clique em "Run"</li>
+                </ol>
+
+                <a href="https://supabase.com/dashboard/project/wjhsitjnccmfrudukbix/sql/new" target="_blank" class="button">
+                    → Abrir SQL Editor
+                </a>
+
+                <div class="warning-box" style="margin-top: 20px;">
+                    <strong>📋 SQL para copiar:</strong>
+                    <div style="margin-top: 12px; background: rgba(0, 0, 0, 0.5); padding: 12px; border-radius: 6px; max-height: 200px; overflow-y: auto;">
+                        <code id="sqlCode" style="display: block; white-space: pre-wrap; word-break: break-all; font-size: 0.85em;"></code>
+                    </div>
+                    <button class="copy-button" onclick="copySql()">📋 Copiar SQL</button>
+                </div>
+
+                <div class="info-box">
+                    <strong>✅ Sucesso:</strong> Você verá "No errors" após clicar em Run
+                </div>
+            </div>
+
+            <!-- Step 3: Teste -->
+            <div class="step">
+                <h2>
+                    <span class="step-number">3</span>
+                    Testar Autenticação
+                </h2>
+                <p>Criar uma conta de teste e validar se tudo funciona.</p>
+
+                <ol style="margin: 16px 0 0 20px; line-height: 1.8;">
+                    <li>Abra: <a href="https://betarena-kohl.vercel.app/register" target="_blank">https://betarena-kohl.vercel.app/register</a></li>
+                    <li>Crie uma conta (email e senha)</li>
+                    <li>Você deve ser redirecionado para <code>/home</code></li>
+                    <li>Verifique no Supabase: <code>Auth → Users</code></li>
+                </ol>
+
+                <a href="https://betarena-kohl.vercel.app/register" target="_blank" class="button">
+                    → Ir para BetArena
+                </a>
+            </div>
+
+            <!-- Step 4: Verificação -->
+            <div class="step">
+                <h2>
+                    <span class="step-number">4</span>
+                    Verificar Tabelas (Opcional)
+                </h2>
+                <p>Confirmar que as tabelas foram criadas com sucesso.</p>
+
+                <ol style="margin: 16px 0 0 20px; line-height: 1.8;">
+                    <li>Abra: <code>Table Editor</code> no Supabase</li>
+                    <li>Você deve ver essas tabelas:</li>
+                </ol>
+
+                <div style="background: rgba(0, 0, 0, 0.3); padding: 12px; margin-top: 12px; border-radius: 6px; font-family: monospace; font-size: 0.9em;">
+                    • profiles<br>
+                    • games<br>
+                    • tournaments<br>
+                    • matches<br>
+                    • wallets<br>
+                    • payments<br>
+                    • login_audit<br>
+                    <em>...e mais 7 tabelas</em>
+                </div>
+            </div>
+        </div>
+
+        <div style="margin-top: 40px; padding: 20px; background: rgba(34, 197, 94, 0.1); border-left: 4px solid #22c55e; border-radius: 8px; text-align: center;">
+            <h3 style="color: #22c55e; margin-bottom: 10px;">✨ Quando terminar todos os passos:</h3>
+            <p>Sua aplicação estará 100% funcional com autenticação, banco de dados e segurança!</p>
+        </div>
+    </div>
+
+    <script>
+        // Load schema.sql from server
+        async function loadSchema() {
+            try {
+                const response = await fetch('/supabase/schema.sql');
+                const sql = await response.text();
+                document.getElementById('sqlCode').textContent = sql;
+            } catch (err) {
+                document.getElementById('sqlCode').textContent = 'Erro ao carregar schema.sql\nTente copiar manualmente de: supabase/schema.sql';
+            }
+        }
+
+        function copySql() {
+            const code = document.getElementById('sqlCode').textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                alert('✅ SQL copiado para a área de transferência!');
+            }).catch(() => {
+                alert('Erro ao copiar. Tente manualmente.');
+            });
+        }
+
+        loadSchema();
+    </script>
+</body>
+</html>
