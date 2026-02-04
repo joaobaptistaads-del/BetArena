@@ -1,8 +1,14 @@
 node_modules/
 dist/
 .env
+.env.local
+.env.*
 .DS_Store
 .vscode/
+
+# Local scripts
+push-to-github.ps1
+push.sh
 
 # Next.js
 .next/
