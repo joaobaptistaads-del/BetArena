@@ -17,3 +17,4 @@ pnpm-debug.log*
 # Build outputs
 apps/**/dist/
 apps/**/build/
+.vercel
