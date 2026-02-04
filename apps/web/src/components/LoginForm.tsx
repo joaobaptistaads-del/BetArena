@@ -22,14 +22,18 @@ export default function LoginForm() {
     try {
       console.log('📝 Tentando fazer login com:', email);
       await signIn(email, password);
-      console.log('✅ Login bem-sucedido, redirecionando...');
+      console.log('✅ signIn bem-sucedido, aguardando 1.5s para sessão ser estabelecida...');
       
-      // Aguarda mais tempo para a sessão ser estabelecida e o contexto atualizar
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Aguarda mais tempo para garantir que a sessão foi salva e o contexto foi atualizado
+      await new Promise(resolve => setTimeout(resolve, 1500));
       
-      // Verificar se o user foi setado no contexto
-      console.log('Redirecionando para /home...');
+      console.log('🚀 Redirecionando para /home...');
       router.replace('/home');
+      
+      // Se chegar aqui e não redirecionar, algo está muito errado
+      setTimeout(() => {
+        setLoading(false);
+      }, 2000);
     } catch (err: any) {
       console.error('❌ Erro no login:', err);
       setError(err.message || 'Erro ao fazer login');

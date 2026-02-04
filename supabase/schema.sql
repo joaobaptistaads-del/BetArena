@@ -20,19 +20,6 @@ create type public.payment_status as enum ('pending', 'authorized', 'captured', 
 create type public.bet_status as enum ('open', 'won', 'lost', 'void');
 create type public.transaction_type as enum ('credit', 'debit', 'hold', 'release');
 
--- Helper functions
-create or replace function public.is_admin()
-returns boolean
-language sql
-stable
-as $$
-  select exists (
-    select 1
-    from public.profiles p
-    where p.id = auth.uid() and p.role = 'admin'
-  );
-$$;
-
 -- Core tables
 create table if not exists public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
@@ -200,6 +187,19 @@ create table if not exists public.login_audit (
   created_at timestamptz not null default now()
 );
 
+-- Helper function (after profiles table exists)
+create or replace function public.is_admin()
+returns boolean
+language sql
+stable
+as $$
+  select exists (
+    select 1
+    from public.profiles p
+    where p.id = auth.uid() and p.role = 'admin'
+  );
+$$;
+
 -- RLS
 alter table public.profiles enable row level security;
 alter table public.tournaments enable row level security;
@@ -225,6 +225,9 @@ create policy "Profiles are viewable" on public.profiles
 create policy "Profiles self update" on public.profiles
   for update to authenticated
   using (id = auth.uid());
+
+create policy "Profiles insert by auth trigger" on public.profiles
+  for insert with check (id = auth.uid());
 
 create policy "Tournaments readable" on public.tournaments
   for select to authenticated
@@ -285,21 +288,33 @@ create policy "Referrals self" on public.referrals
 create policy "Login audit self" on public.login_audit
   for select to authenticated
   using (user_id = auth.uid());
--- Trigger to automatically create profile when user signs up
+
+-- Trigger to auto-create profile when user signs up
 create or replace function public.handle_new_user()
-returns trigger
-language plpgsql
-security definer set search_path = public
-as $$
+returns trigger as $$
+declare
+  username_value text;
 begin
-  insert into public.profiles (id, email, username, role)
-  values (new.id, new.email, new.raw_user_meta_data->>'username', 'player')
-  on conflict (id) do nothing;
+  -- Get username from metadata, or use first part of email as fallback
+  username_value := coalesce(
+    new.raw_user_meta_data->>'username',
+    split_part(new.email, '@', 1) || '_' || substring(new.id::text, 1, 8)
+  );
+  
+  -- Insert profile with error handling
+  begin
+    insert into public.profiles (id, email, username, role)
+    values (new.id, new.email, username_value, 'player');
+  exception when unique_violation then
+    -- Username already exists, add random suffix
+    insert into public.profiles (id, email, username, role)
+    values (new.id, new.email, username_value || '_' || substring(new.id::text, 1, 4), 'player');
+  end;
+  
   return new;
 end;
-$$;
+$$ language plpgsql security definer;
 
--- Attach trigger to auth.users
 drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created
   after insert on auth.users
