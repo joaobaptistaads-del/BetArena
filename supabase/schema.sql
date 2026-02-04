@@ -36,6 +36,7 @@ $$;
 -- Core tables
 create table if not exists public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
+  email text,
   username text unique,
   display_name text,
   role public.role_type not null default 'player',
@@ -284,3 +285,22 @@ create policy "Referrals self" on public.referrals
 create policy "Login audit self" on public.login_audit
   for select to authenticated
   using (user_id = auth.uid());
+-- Trigger to automatically create profile when user signs up
+create or replace function public.handle_new_user()
+returns trigger
+language plpgsql
+security definer set search_path = public
+as $$
+begin
+  insert into public.profiles (id, email, username, role)
+  values (new.id, new.email, new.raw_user_meta_data->>'username', 'player')
+  on conflict (id) do nothing;
+  return new;
+end;
+$$;
+
+-- Attach trigger to auth.users
+drop trigger if exists on_auth_user_created on auth.users;
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute procedure public.handle_new_user();
