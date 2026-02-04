@@ -3,14 +3,16 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.warn('Supabase not configured. Using placeholder client.');
-  // Criar cliente placeholder para evitar erro
-  export const supabase = createClient(
-    'https://placeholder.supabase.co',
-    'placeholder-key',
-    { auth: { persistSession: false } }
+export const supabase = supabaseUrl && supabaseAnonKey
+  ? createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        persistSession: false,
+      },
+    })
+  : null;
+
+if (!supabase) {
+  console.warn(
+    '⚠️  Supabase client not configured. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.'
   );
-} else {
-  export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 }
