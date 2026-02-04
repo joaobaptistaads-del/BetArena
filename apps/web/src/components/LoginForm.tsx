@@ -20,11 +20,16 @@ export default function LoginForm() {
     setLoading(true);
 
     try {
+      console.log('📝 Tentando fazer login com:', email);
       await signIn(email, password);
+      console.log('✅ Login bem-sucedido, redirecionando...');
+      
+      // Aguard um pouco para a sessão ser estabelecida
+      await new Promise(resolve => setTimeout(resolve, 500));
       router.push('/home');
     } catch (err: any) {
+      console.error('❌ Erro no login:', err);
       setError(err.message || 'Erro ao fazer login');
-    } finally {
       setLoading(false);
     }
   };

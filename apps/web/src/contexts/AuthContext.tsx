@@ -28,22 +28,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Check active session
     const checkSession = async () => {
       if (!supabase) {
+        console.warn('Supabase not initialized');
         setLoading(false);
         return;
       }
 
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('Session check error:', error);
+          setUser(null);
+          return;
+        }
+
         if (session?.user) {
+          console.log('✅ Session found for:', session.user.email);
           setUser({
             id: session.user.id,
             email: session.user.email!,
             username: session.user.user_metadata?.username,
             role: session.user.user_metadata?.role || 'player',
           });
+        } else {
+          console.log('❌ No session found');
+          setUser(null);
         }
       } catch (error) {
         console.error('Session check failed:', error);
+        setUser(null);
       } finally {
         setLoading(false);
       }
@@ -54,6 +67,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Listen for auth changes
     if (supabase) {
       const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+        console.log('Auth state changed:', _event, !!session);
+        
         if (session?.user) {
           setUser({
             id: session.user.id,
@@ -67,7 +82,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
 
       return () => {
-        subscription.unsubscribe();
+        subscription?.unsubscribe();
       };
     }
   }, []);
