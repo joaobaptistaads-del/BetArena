@@ -82,7 +82,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       password,
     });
 
-    if (error) throw error;
+    if (error) {
+      console.error('Login error:', error);
+      throw new Error(error.message || 'Erro ao fazer login');
+    }
+
+    if (!data.session) {
+      throw new Error('Não foi possível criar sessão. Verifique suas credenciais.');
+    }
 
     if (data.user) {
       setUser({
@@ -107,12 +114,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           username,
           role: 'player',
         },
+        emailRedirectTo: typeof window !== 'undefined' ? `${window.location.origin}/home` : undefined,
       },
     });
 
     if (error) throw error;
 
-    if (data.user) {
+    // Check if email confirmation is required
+    if (data.user && !data.session) {
+      throw new Error('Por favor, confirme seu email antes de fazer login.');
+    }
+
+    if (data.user && data.session) {
       setUser({
         id: data.user.id,
         email: data.user.email!,
