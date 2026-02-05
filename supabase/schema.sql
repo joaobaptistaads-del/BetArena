@@ -2,6 +2,59 @@
 
 create extension if not exists "uuid-ossp";
 
+-- Disable RLS on all tables first (to remove policy dependencies)
+alter table if exists public.profiles disable row level security;
+alter table if exists public.tournaments disable row level security;
+alter table if exists public.tournament_participants disable row level security;
+alter table if exists public.matches disable row level security;
+alter table if exists public.match_results disable row level security;
+alter table if exists public.disputes disable row level security;
+alter table if exists public.social_posts disable row level security;
+alter table if exists public.elo_ratings disable row level security;
+alter table if exists public.wallets disable row level security;
+alter table if exists public.wallet_transactions disable row level security;
+alter table if exists public.payments disable row level security;
+alter table if exists public.bets disable row level security;
+alter table if exists public.payouts disable row level security;
+alter table if exists public.referrals disable row level security;
+alter table if exists public.login_audit disable row level security;
+
+-- Drop triggers first
+drop trigger if exists on_auth_user_created on auth.users;
+
+-- Drop functions (CASCADE to remove dependent policies)
+drop function if exists public.handle_new_user() cascade;
+drop function if exists public.is_admin() cascade;
+
+-- Drop all tables (cascade removes dependencies)
+drop table if exists public.login_audit cascade;
+drop table if exists public.referrals cascade;
+drop table if exists public.payouts cascade;
+drop table if exists public.bets cascade;
+drop table if exists public.payments cascade;
+drop table if exists public.wallet_transactions cascade;
+drop table if exists public.wallets cascade;
+drop table if exists public.elo_ratings cascade;
+drop table if exists public.social_posts cascade;
+drop table if exists public.disputes cascade;
+drop table if exists public.match_results cascade;
+drop table if exists public.matches cascade;
+drop table if exists public.tournament_participants cascade;
+drop table if exists public.tournaments cascade;
+drop table if exists public.challenges cascade;
+drop table if exists public.games cascade;
+drop table if exists public.profiles cascade;
+
+-- Drop existing types if they exist (with cascade to handle dependencies)
+drop type if exists public.role_type cascade;
+drop type if exists public.game_platform cascade;
+drop type if exists public.tournament_status cascade;
+drop type if exists public.match_status cascade;
+drop type if exists public.dispute_status cascade;
+drop type if exists public.payment_status cascade;
+drop type if exists public.bet_status cascade;
+drop type if exists public.transaction_type cascade;
+
 -- Enums
 create type public.role_type as enum (
   'admin',
@@ -42,6 +95,14 @@ create table if not exists public.games (
   created_at timestamptz not null default now()
 );
 
+insert into public.games (name, slug, active)
+values
+  ('Counter-Strike 2', 'counter-strike-2', true),
+  ('Valorant', 'valorant', true),
+  ('Call of Duty', 'call-of-duty', true),
+  ('EA FC 26', 'ea-fc-26', true)
+on conflict (slug) do nothing;
+
 create table if not exists public.tournaments (
   id uuid primary key default uuid_generate_v4(),
   game_id uuid not null references public.games(id),
@@ -62,6 +123,18 @@ create table if not exists public.tournaments (
   rules jsonb,
   created_at timestamptz not null default now(),
   constraint pct_total_check check (winner_pct + runnerup_pct + organizer_pct + platform_pct >= 0.999)
+);
+
+create table if not exists public.challenges (
+  id uuid primary key default uuid_generate_v4(),
+  challenger_id uuid not null references public.profiles(id),
+  opponent_username text not null,
+  game_id uuid not null references public.games(id),
+  prize numeric(12,2) not null default 0,
+  currency text not null default 'USD',
+  status text not null default 'pending',
+  scheduled_at timestamptz,
+  created_at timestamptz not null default now()
 );
 
 create table if not exists public.tournament_participants (
@@ -203,6 +276,7 @@ $$;
 -- RLS
 alter table public.profiles enable row level security;
 alter table public.tournaments enable row level security;
+alter table public.challenges enable row level security;
 alter table public.tournament_participants enable row level security;
 alter table public.matches enable row level security;
 alter table public.match_results enable row level security;
@@ -236,6 +310,14 @@ create policy "Tournaments readable" on public.tournaments
 create policy "Organizer manage tournaments" on public.tournaments
   for all to authenticated
   using (organizer_id = auth.uid() or public.is_admin());
+
+create policy "Challenges readable" on public.challenges
+  for select to authenticated
+  using (true);
+
+create policy "Challenger manage challenges" on public.challenges
+  for all to authenticated
+  using (challenger_id = auth.uid());
 
 create policy "Participants self manage" on public.tournament_participants
   for all to authenticated
